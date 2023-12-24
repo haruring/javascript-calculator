@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript電卓</title>
+    <style>
+        #frame {
+            border: 1px solid #000;
+            border-radius: 8px;
+            padding: 4px;
+            box-sizing: border-box;
+        }
+
+        #display {
+            position: relative;
+            display: block;
+            width: 100%;
+            font-size: 3rem;
+            text-align: right;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: rgba(200, 230, 200, 0.737);
+            box-sizing: border-box;
+        }
+        #codeArea {
+         /* エラーや記号*/
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 3.5rem;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            margin: auto;
+            padding: 1rem;
+            font-size: .5em;
+            box-sizing: border-box;
+        }
+        #error,
+        #memory {
+            display: flex;
+            flex: 1 1 1fr;
+            justify-content: center;
+            width: 100%;
+        }
+        #error {
+            font-size: 1.5em;
+        }
+        #memory {
+            font-style: italic;
+        }
+
+        #currentCalc {
+            /* 現在入力中の内容 */
+            position: absolute;
+            display: block;
+            width: calc(100% - 3.5rem);
+            height: 2.5rem;
+            top: 0;
+            right: 0;
+            left: 3.5rem;
+            margin: auto;
+            padding-inline: 1rem;
+            box-sizing: border-box;
+            font-size: .6em;
+        }
+        #numArea {
+            /* 数値入力欄 */
+            position: relative;
+            display: block;
+            width: calc(100% - 3.5rem);
+            margin-top: 2.5rem;
+            margin-left: auto;
+            padding-inline: 1rem;
+            box-sizing: border-box;
+        }
+
+        #keys {
+            display: grid;
+            gap: 2px;
+            grid-template-columns: 2fr 1fr;
+            grid-template-rows: auto 1fr;
+        }
+
+        #functionKeys {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            /* 親の座標 */
+            grid-column-start: 1;
+            grid-column-end: 3;
+            grid-row-start: 1;
+            grid-row-end: 2;
+        }
+        #mainKeys {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            /* 親の座標 */
+            grid-column-start: 1;
+            grid-column-end: 2;
+            grid-row-start: 2;
+            grid-row-end: 3;
+        }
+
+        #cmdKeys {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            /* 親の座標 */
+            grid-column-start: 2;
+            grid-column-end: 3;
+            grid-row-start: 2;
+            grid-row-end: 3;
+        }
+
+
+        .buttons {
+            display: grid;
+            gap: 2px;
+            margin-top: .25rem;
+            border-radius: 4px;
+
+        }
+
+        .btn {
+            padding: 1rem;
+            font-size: 2rem;
+            border-radius: 4px;
+        }
+
+    </style>
+</head>
+<body>
+<h1>JavaScriptで電卓</h1>
+<div id="frame">
+    <div id="display">
+        <small id="currentCalc"></small>
+        <span id="numArea">0</span>
+        <span id="codeArea">
+            <div id="memory"></div>
+            <div id="error"></div>
+        </span>
+    </div>
+    <div id="keys">
+        <div id="functionKeys" class="buttons">
+            <button type="button" class="btn" value="clearAll" data-type="func">CA</button>
+            <button type="button" class="btn" value="clear" data-type="func">C</button>
+            <button type="button" class="btn" value="mAdd" data-type="func">M+</button>
+            <button type="button" class="btn" value="mDel" data-type="func">M-</button>
+            <button type="button" class="btn" value="mResult" data-type="func">MR</button>
+            <button type="button" class="btn" value="mClear" data-type="func">MC</button>
+        </div>
+        <div id="mainKeys" class="buttons">
+            <button type="button" class="btn" value="7" data-type="num">7</button>
+            <button type="button" class="btn" value="8" data-type="num">8</button>
+            <button type="button" class="btn" value="9" data-type="num">9</button>
+            <button type="button" class="btn" value="4" data-type="num">4</button>
+            <button type="button" class="btn" value="5" data-type="num">5</button>
+            <button type="button" class="btn" value="6" data-type="num">6</button>
+            <button type="button" class="btn" value="1" data-type="num">1</button>
+            <button type="button" class="btn" value="2" data-type="num">2</button>
+            <button type="button" class="btn" value="3" data-type="num">3</button>
+            <button type="button" class="btn" value="-" data-type="change">+/-</button>
+            <button type="button" class="btn" value="0" data-type="num">0</button>
+            <button type="button" class="btn" value="." data-type="float">.</button>
+        </div>
+        <div id="cmdKeys" class="buttons">
+            <button type="button" class="btn" value="/" data-type="calc">÷</button>
+            <button type="button" class="btn" value="*" data-type="calc">×</button>
+            <button type="button" class="btn" value="-" data-type="calc">-</button>
+            <button type="button" class="btn double" value="+" data-type="calc">+</button>
+            <button type="button" class="btn" value="=" data-type="result">=</button>
+        </div>
+    </div>
+</div>
+<script>
+    const btnList = document.querySelectorAll('.btn')
+    const cDisplay = document.querySelector('#display')
+    const errorArea = document.querySelector('#error')
+    const numArea = document.querySelector('#numArea')
+    // 四則演算ボタン(calc)を押すまで文字列連結 num
+    // 四則演算ボタン(calc)を押したら、num結合文字列を数値に変換
+    // イコールを押したら演算
+    let inputNumber = ''
+    for (const btn of btnList) {
+        btn.addEventListener('click', () => {
+            if(btn.dataset.type == 'num') {
+                console.log('--num--')
+                console.log(btn.value)
+                if (numArea.innerText == 0) {
+                    numArea.innerText = btn.value
+                } else if (numArea.innerText.length < 12) {
+                    // 最高12桁
+                    numArea.innerText += btn.value
+                } else if(numArea.innerText.length == 12) {
+                    errorArea.innerText = 'E'
+                    cDisplay.style.border.color = 'red'
+                    cDisplay.style.border.width = '1px'
+                }
+            } else if (btn.dataset.type == 'calc') {
+                console.log('--calc--')
+                inputNumber = parseInt(numArea.innerText)
+                console.log(inputNumber)
+            }
+
+            if (btn.dataset.type == 'func') {
+                if(btn.value == 'clearAll') {
+                    console.log('clearAll')
+                } else if(btn.value == 'clear') {
+                    console.log('clear')
+                } else if(btn.value == 'mAdd') {
+                    console.log('mAdd')
+                } else if(btn.value == 'mDel') {
+                    console.log('mDel')
+                } else if(btn.value == 'mClear') {
+                    console.log('mClear')
+                } else if(btn.value == 'mResult') {
+                    console.log('mResult')
+                }
+            }
+                })
+    }
+</script>
+</body>
+</html>
